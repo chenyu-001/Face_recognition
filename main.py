@@ -105,11 +105,69 @@ def recognize_face_video():
     cv2.destroyAllWindows()
 
 
+def compare_pic_video(image_path):
+
+    # 先为已知的人生成人脸编码
+    known_person_image = face_recognition.load_image_file(image_path)
+    known_person_face_encoding = face_recognition.face_encodings(known_person_image)[0]
+
+    # 获取摄像头的视频流
+    video_capture = cv2.VideoCapture(0)
+
+    while True:
+        # 获取一帧视频
+        ret, frame = video_capture.read()
+
+        # 找到视频帧中所有的人脸和人脸编码
+        face_locations = face_recognition.face_locations(frame)
+        face_encodings = face_recognition.face_encodings(frame, face_locations)
+
+        # # 对每个人脸进行识别
+        # for face_encoding in face_encodings:
+        #     # 检查人脸是否与已知人匹配
+        #     match = face_recognition.compare_faces([known_person_face_encoding], face_encoding)
+        #
+        #     # 如果找到匹配，标记为已知人的名字
+        #     name = "Unknown"
+        #     if match[0]:
+        #         name = "Known Person"
+        #
+        #     # 画出人脸位置，并标注名字
+        #     top, right, bottom, left = face_locations[0]
+        #     cv2.rectangle(frame, (left, top), (right, bottom), (0, 0, 255), 2)
+        #     cv2.putText(frame, name, (left, bottom + 20), cv2.FONT_HERSHEY_PLAIN, 1.0, (255, 255, 255), 1)
+
+        # 对每个人脸进行识别
+        for (top, right, bottom, left), face_encoding in zip(face_locations, face_encodings):
+            # 检查人脸是否与已知人匹配
+            matches = face_recognition.compare_faces([known_person_face_encoding], face_encoding)
+
+            name = "Unknown"  # 默认为 "Unknown"
+
+            if True in matches:
+                name = "Known Person"
+
+            # 画出人脸位置，并标注名字
+            cv2.rectangle(frame, (left, top), (right, bottom), (0, 0, 255), 2)
+            cv2.putText(frame, name, (left, bottom + 20), cv2.FONT_HERSHEY_PLAIN, 1.0, (255, 255, 255), 1)
+
+        # 显示结果视频帧
+        cv2.imshow('Video', frame)
+
+        # 如果按下q键，退出循环
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+
+    # 释放视频流并关闭窗口
+    video_capture.release()
+    cv2.destroyAllWindows()
+
+
 if __name__ == "__main__":
     # image_path = "img/rich_women.jpg"
     # create_and_show_mirror_image(image_path)
     # recognize_face_pic(image_path)
     image_path = "img/me.jpg"
     # recognize_face_pic_gpt(image_path)
-    recognize_face_video()
-
+    # recognize_face_video()
+    compare_pic_video(image_path)
